@@ -40,37 +40,40 @@ public class InventoryMoveTest
 
     [Test]
 
-    public void Move_DestinationFull_RestoresToOriginalOrigin()
+    public void Move_TargetOffGrid_RestoresToOriginalOrigin()
     {
         var gridA = new ItemGrid(10, 10);
         var gridB = new ItemGrid(2, 2);
         IGridItem testItem1 = new FakeItem(new GridItemDef(new Vector2Int(2, 2), null, "helmet"));
-        IGridItem testItem2 = new FakeItem(new GridItemDef(new Vector2Int(2, 2), null, "helmet"));
 
         Assert.That(gridA.TryPlaceItem(testItem1, new Vector2Int(3, 4)), Is.True);
-        Assert.That(gridB.TryPlaceItem(testItem2, new Vector2Int(0, 0)), Is.True);
 
-        Assert.That(InventoryMove.Move(gridA, testItem1, gridB, new Vector2Int(0, 0)), Is.False);
+        Assert.That(InventoryMove.Move(gridA, testItem1, gridB, new Vector2Int(1, 1)), Is.False);
         Assert.That(gridA.OriginOf(testItem1), Is.EqualTo(new Vector2Int(3, 4)));
-        Assert.That(gridB.OriginOf(testItem2), Is.EqualTo(new Vector2Int(0, 0)));
     }
 
     [Test]
-    public void Move_DestinationFull_OrigingUntouched()
+    public void Move_MultipleBlockers_DestinationUntyouch()
     {
         var gridA = new ItemGrid(10, 10);
         var gridB = new ItemGrid(2, 2);
         IGridItem testItem1 = new FakeItem(new GridItemDef(new Vector2Int(2, 2), null, "helmet"));
-        IGridItem testItem2 = new FakeItem(new GridItemDef(new Vector2Int(2, 2), null, "helmet"));
+        IGridItem blocker1 = new FakeItem(new GridItemDef(new Vector2Int(1, 1), null, "coin"));
+        IGridItem blocker2 = new FakeItem(new GridItemDef(new Vector2Int(1, 1), null, "coin"));
+        IGridItem blocker3 = new FakeItem(new GridItemDef(new Vector2Int(1, 1), null, "coin"));
+        IGridItem blocker4 = new FakeItem(new GridItemDef(new Vector2Int(1, 1), null, "coin"));
 
         Assert.That(gridA.TryPlaceItem(testItem1, new Vector2Int(3, 4)), Is.True);
-        Assert.That(gridB.TryPlaceItem(testItem2, new Vector2Int(0, 0)), Is.True);
+
+        Assert.That(gridB.TryPlaceItem(blocker1, new Vector2Int(0, 0)), Is.True);
+        Assert.That(gridB.TryPlaceItem(blocker2, new Vector2Int(1, 0)), Is.True);
+        Assert.That(gridB.TryPlaceItem(blocker3, new Vector2Int(0, 1)), Is.True);
+        Assert.That(gridB.TryPlaceItem(blocker4, new Vector2Int(1, 1)), Is.True);
 
         var beforeMoveSnapshotGridB = ItemGridSnapshot(gridB);
         Assert.That(InventoryMove.Move(gridA, testItem1, gridB, new Vector2Int(0, 0)), Is.False);
         var afterMoveSnapshotGridB = ItemGridSnapshot(gridB);
 
-        Assert.That(beforeMoveSnapshotGridB, Is.EqualTo(afterMoveSnapshotGridB));
+        Assert.That(afterMoveSnapshotGridB, Is.EqualTo(beforeMoveSnapshotGridB));
     }
-
 }

@@ -65,4 +65,33 @@ public class ItemGridTests
         Assert.That(grid.TryPlaceItem(testItem2, new Vector2Int(0, 0)), Is.True);
 
     }
+
+    [Test]
+    public void BlockersAt_FreePosition_ReturnsEmpty()
+    {
+        var grid = new ItemGrid(4, 4);
+        IGridItem testItem = new FakeItem(new GridItemDef(new Vector2Int(2, 2), null, "helmet"));
+        Assert.That(grid.BlockersAt(testItem, new Vector2Int(0, 0)), Is.Empty);
+    }
+
+    [Test]
+    public void BlockersAt_LargeItemCoveringFourCells_ReturnsOneNotFour()
+    {
+        var grid = new ItemGrid(4, 4);
+        IGridItem testItem = new FakeItem(new GridItemDef(new Vector2Int(2, 2), null, "helmet"));
+        IGridItem testItem2 = new FakeItem(new GridItemDef(new Vector2Int(2, 2), null, "gloves"));
+        Assert.That(grid.TryPlaceItem(testItem, new Vector2Int(0, 0)), Is.True);
+        var blockers = grid.BlockersAt(testItem2, new Vector2Int(0, 0));
+        Assert.That(blockers.Count, Is.EqualTo(1));
+    }
+
+    [Test]
+    public void BlockersAt_IgnoresTheMovingItemItself()
+    {
+        var grid = new ItemGrid(4, 4);
+        IGridItem testItem = new FakeItem(new GridItemDef(new Vector2Int(2, 2), null, "helmet"));
+        Assert.That(grid.TryPlaceItem(testItem, new Vector2Int(0, 0)), Is.True);
+        var blockers = grid.BlockersAt(testItem, new Vector2Int(0, 0));
+        Assert.That(blockers.Count, Is.EqualTo(0));
+    }
 }

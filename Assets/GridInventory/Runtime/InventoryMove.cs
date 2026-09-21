@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using UnityEngine;
 
 namespace GridInventory
@@ -19,15 +20,65 @@ namespace GridInventory
                 return false;
             }
 
-            if (!source.RemoveItem(item)) // item not removed
+            var blockers = destination.BlockersAt(item, targetOrigin);
+            if (blockers.Count > 1)
             {
                 return false;
             }
-
-            if (destination.TryPlaceItem(item, targetOrigin)) // item placed
+            // merge stack
+            var blocker = blockers.FirstOrDefault();
+            if (item is IStackable stackableItem && blocker is IStackable stackableBlocker && stackableItem.CanStackWith(blocker))
             {
+                var stackDiff = stackableBlocker.MaxStackSize - stackableBlocker.StackCount;
+                var valueToTransfer = Math.Min(stackDiff, stackableItem.StackCount);
+
+                if (valueToTransfer <= 0) return false;
+
+                stackableBlocker.StackCount += valueToTransfer;
+                stackableItem.StackCount -= valueToTransfer;
+
+                if (stackableItem.StackCount == 0)
+                {
+                    source.RemoveItem(item);
+                }
                 return true;
             }
+
+            if (blocker != null)
+            {
+                //swap
+                var blockerOrigin = destination.OriginOf(blocker).Value;
+
+                // item not removed
+                if (!source.RemoveItem(item)) return false;
+
+                if (!destination.RemoveItem(blocker))
+                {
+                    source.TryPlaceItem(item, itemOriginalOrigin.Value); // undo first step
+                    return false;
+                }
+
+                if (!destination.TryPlaceItem(item, targetOrigin))
+                {
+                    destination.TryPlaceItem(blocker, blockerOrigin);
+                    source.TryPlaceItem(item, itemOriginalOrigin.Value);
+                    return false;
+                }
+
+                if (!source.TryPlaceItem(blocker, itemOriginalOrigin.Value))
+                {
+                    destination.RemoveItem(item);
+                    destination.TryPlaceItem(blocker, blockerOrigin);
+                    source.TryPlaceItem(item, itemOriginalOrigin.Value);
+                    return false;
+                }
+
+                return true;
+            }
+
+            if (!source.RemoveItem(item)) return false;
+
+            if (destination.TryPlaceItem(item, targetOrigin)) return true;
 
             var rollbackSucceeded = source.TryPlaceItem(item, itemOriginalOrigin.Value);
 
@@ -41,4 +92,3 @@ namespace GridInventory
         }
     }
 }
-

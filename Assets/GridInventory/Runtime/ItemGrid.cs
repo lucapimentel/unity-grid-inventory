@@ -107,6 +107,32 @@ namespace GridInventory
             return Occupancy[origin.x, origin.y];
         }
 
+        public List<IGridItem> BlockersAt(IGridItem item, Vector2Int origin)
+        {
+            List<IGridItem> blockers = new List<IGridItem>();
+            foreach (var cell in CellsCovered(item.Def.Footprint, origin))
+            {
+                // out of bounds
+                if (cell.x < 0 || cell.y < 0)
+                {
+                    continue;
+                }
+                // out of bounds
+                if (cell.x >= Width || cell.y >= Height)
+                {
+                    continue;
+                }
+
+                var occupantItem = ItemAt(cell);
+
+                if (occupantItem != null && occupantItem != item & !blockers.Contains(occupantItem))
+                {
+                    blockers.Add(occupantItem);
+                }
+            }
+            return blockers;
+        }
+
         public bool TryPlaceItem(IGridItem item, Vector2Int origin)
         {
             if (item == null)
