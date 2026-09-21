@@ -1,10 +1,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using System.Linq;
 
 namespace GridInventory
 {
-    public class ItemGrid
+    public class ItemGrid : IItemContainer
     {
         public readonly int Width, Height;
         private readonly IGridItem[,] Occupancy;
@@ -73,6 +74,37 @@ namespace GridInventory
             }
 
             return true;
+        }
+
+        public Vector2Int? OriginOf(IGridItem item)
+        {
+            if (item == null)
+            {
+                return null;
+            }
+
+            if (Placements.TryGetValue(item, out var origin)) // check on dictionary for the item if exists return the origin vector
+            {
+                return origin;
+            }
+
+            return null;
+        }
+
+        public IGridItem ItemAt(Vector2Int origin)
+        {
+            // out of bounds
+            if (origin.x < 0 || origin.y < 0)
+            {
+                return null;
+            }
+            // out of bounds
+            if (origin.x >= Width || origin.y >= Height)
+            {
+                return null;
+            }
+
+            return Occupancy[origin.x, origin.y];
         }
 
         public bool TryPlaceItem(IGridItem item, Vector2Int origin)
