@@ -6,7 +6,7 @@ namespace GridInventory
 {
     public class InventoryMove
     {
-        public static bool Move(ItemGrid source, IGridItem item, ItemGrid destination, Vector2Int targetOrigin)
+        public static bool Move(IItemContainer source, IGridItem item, IItemContainer destination, Vector2Int targetOrigin)
         {
             if (item == null || source == null || destination == null)
             {
