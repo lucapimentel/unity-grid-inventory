@@ -8,6 +8,7 @@ namespace GridInventory
     public class ItemGrid : IItemContainer
     {
         public readonly int Width, Height;
+        public bool IsEmpty => Placements.Count == 0;
         private readonly IGridItem[,] Occupancy;
         private readonly Dictionary<IGridItem, Vector2Int> Placements;
 
